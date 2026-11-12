@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+overrides:
+  enhanced-resolve: 5.26.1
+  graceful-fs: 4.2.11
+
+onlyBuiltDependencies:
+  - sharp
+  - '@tailwindcss/oxide'
