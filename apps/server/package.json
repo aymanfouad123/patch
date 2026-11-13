@@ -1,0 +1,25 @@
+{
+  "name": "@patch/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "@patch/environment": "workspace:*",
+    "@vercel/sandbox": "^3.9.1",
+    "convex": "^1.49.0",
+    "hono": "^4.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.1.0"
+  }
+}

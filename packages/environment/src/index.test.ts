@@ -6,7 +6,7 @@ import {
   redact,
   resolveApprovedEnv,
   sourceForVariable,
-} from "./environment";
+} from "./index";
 
 describe("environment discovery", () => {
   it("detects commands and candidates without treating candidates as approved", () => {

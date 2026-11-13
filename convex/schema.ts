@@ -1,13 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-
-export const sandboxJobStatus = v.union(
-  v.literal("queued"),
-  v.literal("starting"),
-  v.literal("running"),
-  v.literal("completed"),
-  v.literal("failed"),
-);
+import { runKind, runOutcome, runStage, runStatus } from "./lib/runs";
 
 const environmentVariable = v.object({
   name: v.string(),
@@ -41,6 +34,8 @@ export default defineSchema({
       v.literal("ready"),
       v.literal("failed"),
     ),
+    commitSha: v.optional(v.string()),
+    workingDirectory: v.optional(v.string()),
     detected: v.optional(
       v.object({
         runtime: v.string(),
@@ -77,40 +72,44 @@ export default defineSchema({
     ),
     updatedAt: v.number(),
   }).index("by_singleton", ["singleton"]),
-  workspaces: defineTable({
+  runs: defineTable({
+    kind: runKind,
     ownerUserId: v.string(),
-    repoUrl: v.string(),
-    status: v.string(),
     active: v.boolean(),
+    status: runStatus,
+    stage: v.optional(runStage),
+    failedStage: v.optional(runStage),
+    repoUrl: v.string(),
+    commitSha: v.string(),
+    workingDirectory: v.string(),
+    installCommand: v.string(),
+    startCommand: v.string(),
+    port: v.number(),
+    healthPath: v.string(),
+    previewMode: v.boolean(),
+    variableNames: v.array(v.string()),
+    profileVersion: v.number(),
     sandboxName: v.string(),
     sandboxId: v.optional(v.string()),
-    commitSha: v.optional(v.string()),
+    createStartedAt: v.optional(v.number()),
+    providerTimeoutAt: v.optional(v.number()),
     previewUrl: v.optional(v.string()),
-    expiresAt: v.optional(v.number()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    error: v.optional(v.string()),
-    terminalStatus: v.optional(v.string()),
+    deadlineAt: v.optional(v.number()),
+    readyUntil: v.optional(v.number()),
+    claimId: v.optional(v.string()),
+    claimedBy: v.optional(v.string()),
+    claimExpiresAt: v.optional(v.number()),
+    cancelRequested: v.boolean(),
+    diagnostics: v.optional(v.string()),
     cleanupAttempts: v.optional(v.number()),
-    purpose: v.optional(v.literal("prepare")),
-    profileVersion: v.optional(v.number()),
-  })
-    .index("by_owner_and_active", ["ownerUserId", "active"])
-    .index("by_owner", ["ownerUserId"]),
-  sandboxJobs: defineTable({
-    ownerUserId: v.string(),
-    status: sandboxJobStatus,
-    active: v.boolean(),
-    sandboxName: v.optional(v.string()),
-    stdout: v.optional(v.string()),
-    stderr: v.optional(v.string()),
-    exitCode: v.optional(v.number()),
-    error: v.optional(v.string()),
+    terminalOutcome: v.optional(runOutcome),
     createdAt: v.number(),
     updatedAt: v.number(),
-    startedAt: v.optional(v.number()),
     finishedAt: v.optional(v.number()),
   })
-    .index("by_owner_and_active", ["ownerUserId", "active"])
-    .index("by_owner", ["ownerUserId"]),
+    .index("by_status_and_createdAt", ["status", "createdAt"])
+    .index("by_status_and_claimExpiresAt", ["status", "claimExpiresAt"])
+    .index("by_status_and_readyUntil", ["status", "readyUntil"])
+    .index("by_owner", ["ownerUserId"])
+    .index("by_owner_and_active", ["ownerUserId", "active"]),
 });

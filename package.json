@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @patch/web dev",
+    "dev:server": "pnpm --filter @patch/server dev",
     "build": "pnpm --filter @patch/web build",
     "start": "pnpm --filter @patch/web start",
     "convex:dev": "convex dev",
@@ -29,7 +30,7 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.13.0",
-    "@vercel/sandbox": "^3.9.1",
+    "@patch/environment": "workspace:*",
     "better-auth": "~1.7.22",
     "convex": "^1.49.0"
   }

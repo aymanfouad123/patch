@@ -9,16 +9,13 @@ import { LoadingPanel } from "./loading-panel";
 import { cn } from "./lib/utils";
 import { UnlockPanel } from "./unlock-panel";
 
-export type PatchProps = Pick<
-  AgentPanelProps,
-  "onPrompt" | "sandbox" | "workspace" | "environment"
-> & {
+export type PatchProps = Pick<AgentPanelProps, "onPrompt" | "run" | "environment"> & {
   className?: string;
   /** Injected auth state. Omit to keep the open demo panel. */
   auth?: PatchAuth;
 };
 
-export function Patch({ className, onPrompt, auth, sandbox, workspace, environment }: PatchProps) {
+export function Patch({ className, onPrompt, auth, run, environment }: PatchProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -43,12 +40,7 @@ export function Patch({ className, onPrompt, auth, sandbox, workspace, environme
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/10 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 motion-reduce:animate-none" />
         {!auth ? (
-          <AgentPanel
-            onPrompt={onPrompt}
-            sandbox={sandbox}
-            workspace={workspace}
-            environment={environment}
-          />
+          <AgentPanel onPrompt={onPrompt} run={run} environment={environment} />
         ) : auth.status === "loading" ? (
           <LoadingPanel />
         ) : auth.status === "signedOut" ? (
@@ -59,8 +51,7 @@ export function Patch({ className, onPrompt, auth, sandbox, workspace, environme
           <AgentPanel
             onPrompt={onPrompt}
             onSignOut={auth.signOut}
-            sandbox={sandbox}
-            workspace={workspace}
+            run={run}
             environment={environment}
           />
         )}

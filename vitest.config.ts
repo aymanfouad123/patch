@@ -9,7 +9,6 @@ export default defineConfig({
           name: "convex",
           environment: "edge-runtime",
           include: ["convex/**/*.test.ts"],
-          exclude: ["convex/lib/runSandboxJob.test.ts", "convex/workspaceActions.test.ts"],
           server: {
             deps: {
               inline: ["convex-test", "@convex-dev/better-auth"],
@@ -24,9 +23,16 @@ export default defineConfig({
       },
       {
         test: {
-          name: "sandbox-node",
+          name: "environment",
           environment: "node",
-          include: ["convex/lib/runSandboxJob.test.ts", "convex/workspaceActions.test.ts"],
+          include: ["packages/environment/src/**/*.test.ts"],
+        },
+      },
+      {
+        test: {
+          name: "server",
+          environment: "node",
+          include: ["apps/server/src/**/*.test.ts"],
         },
       },
       {

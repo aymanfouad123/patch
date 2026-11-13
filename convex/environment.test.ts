@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { createTestConvex, OWNER_GITHUB_ID } from "./test.setup";
 
 async function ownerFixture() {
@@ -124,12 +124,9 @@ describe("environment profile", () => {
       previewMode: false,
       variables: ["NEXT_PUBLIC_CONVEX_URL"],
     });
-    await expect(asOwner.mutation(api.environment.prepareEnvironment, {})).rejects.toMatchObject({
-      data: {
-        code: "MISSING_VARIABLES",
-        names: ["NEXT_PUBLIC_CONVEX_URL"],
-      },
-    });
+    await expect(
+      asOwner.mutation(api.runs.enqueue, { kind: "environment_test" }),
+    ).rejects.toThrow(/commitSha/i);
   });
   function mockDiscovery() {
     const fetch = vi.fn(async (url: string) => {
@@ -150,16 +147,17 @@ describe("environment profile", () => {
     return fetch;
   }
 
-  it("discovers anonymously, requires Save, then queues credential-free preview preparation", async () => {
+  it("discovers anonymously, requires Save, then can enqueue a pinned run", async () => {
     vi.stubEnv("GITHUB_CLIENT_ID", "");
     vi.stubEnv("GITHUB_CLIENT_SECRET", "");
     const fetch = mockDiscovery();
     const { asOwner, t } = await ownerFixture();
-    await expect(asOwner.mutation(api.environment.prepareEnvironment, {})).rejects.toThrow("save");
+    await expect(
+      asOwner.mutation(api.runs.enqueue, { kind: "environment_test" }),
+    ).rejects.toThrow(/profile/i);
     await asOwner.action(api.environment.discoverEnvironment, {});
     const draft = await asOwner.query(api.environment.getEnvironment, {});
     expect(draft.version).toBe(0);
-    await expect(asOwner.mutation(api.environment.prepareEnvironment, {})).rejects.toThrow("save");
     expect(fetch.mock.calls[0][1].headers).not.toHaveProperty("Authorization");
     expect(fetch.mock.calls[1][0]).toContain("/git/trees/abc123?recursive=1");
     expect(fetch.mock.calls.some(([url]) => url.includes(".env.local"))).toBe(false);
@@ -171,14 +169,21 @@ describe("environment profile", () => {
       previewMode: true,
       variables: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_CONVEX_SITE_URL"],
     });
-    const id = await asOwner.mutation(api.environment.prepareEnvironment, {});
-    expect(await t.run((ctx) => ctx.db.get(id))).toMatchObject({
-      purpose: "prepare",
-      profileVersion: 1,
-      status: "queued",
+    await t.mutation(internal.environment.seedProfile, {
+      repoUrl: "https://github.com/example/patch.git",
+      commitSha: "abcdef1234567890abcdef1234567890abcdef12",
+      installCommand: draft.installCommand,
+      startCommand: draft.startCommand,
+      port: draft.port,
+      healthPath: draft.healthPath,
+      previewMode: true,
     });
-    expect(await asOwner.query(api.environment.getEnvironment, {})).toMatchObject({
-      status: "preparing",
+    const { runId } = await asOwner.mutation(api.runs.enqueue, { kind: "environment_test" });
+    expect(await t.run((ctx) => ctx.db.get(runId))).toMatchObject({
+      kind: "environment_test",
+      profileVersion: 2,
+      status: "queued",
+      previewMode: true,
     });
   });
 

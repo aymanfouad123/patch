@@ -2,8 +2,8 @@ export { Patch, type PatchProps } from "./patch";
 export {
   AgentPanel,
   type AgentPanelProps,
-  type AgentPanelSandboxProps,
-  type SandboxJobView,
+  type RunProps,
+  type RunView,
 } from "./agent-panel";
 export type { PatchAuth, PatchAuthUser } from "./auth";
 export {

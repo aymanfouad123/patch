@@ -14,13 +14,10 @@ import {
   discoverEnvironment as inspectEnvironment,
   isBlockedVariableName,
   isValidVariableName,
-  resolveApprovedEnv,
   redact,
   sourceForVariable,
   type EnvironmentConfig,
-} from "./lib/environment";
-import { createWorkspace } from "./workspaces";
-
+} from "@patch/environment";
 const SINGLETON = "project";
 const DEFAULT_INSTALL = "pnpm install --frozen-lockfile";
 const DEFAULT_START = "pnpm dev --hostname 0.0.0.0 --port 3000";
@@ -348,35 +345,6 @@ export const discoverEnvironment = action({
   },
 });
 
-export const prepareEnvironment = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const { userId } = await requireOwnerIdentity(ctx);
-    const profile = await getProfile(ctx);
-    if (!profile || profile.version === 0)
-      throw new ConvexError("Discover and save the environment first");
-    const resolved = resolveApprovedEnv(profile, process.env);
-    if (resolved.rejected.length)
-      throw new ConvexError({ code: "REJECTED_VARIABLES", names: resolved.rejected });
-    if (resolved.missing.length)
-      throw new ConvexError({ code: "MISSING_VARIABLES", names: resolved.missing });
-    const id = await createWorkspace(ctx, userId, {
-      repoUrl: profile.repoUrl,
-      purpose: "prepare",
-      profileVersion: profile.version,
-      rejectActive: true,
-    });
-    await ctx.db.patch(profile._id, {
-      status: "preparing",
-      lastAttemptAt: Date.now(),
-      lastError: undefined,
-      lastMissingVariables: undefined,
-      updatedAt: Date.now(),
-    });
-    return id;
-  },
-});
-
 export const getForProvision = internalQuery({
   args: {},
   handler: async (ctx) => getProfile(ctx),
@@ -394,34 +362,54 @@ export const recordClonedCommit = internalMutation({
   },
 });
 
+export async function applyVerified(
+  ctx: MutationCtx,
+  args: { profileVersion: number; commitSha: string; durationMs: number },
+) {
+  const profile = await getProfile(ctx);
+  if (!profile || profile.version !== args.profileVersion) return false;
+  const now = Date.now();
+  await ctx.db.patch(profile._id, {
+    status: "ready",
+    latestCommitSha: args.commitSha,
+    lastVerifiedAt: now,
+    lastError: undefined,
+    lastMissingVariables: undefined,
+    verified: {
+      version: profile.version,
+      commitSha: args.commitSha,
+      config: configOf(profile),
+      durationMs: args.durationMs,
+      verifiedAt: now,
+    },
+    updatedAt: now,
+  });
+  return true;
+}
+
 export const recordVerified = internalMutation({
   args: {
     profileVersion: v.number(),
     commitSha: v.string(),
     durationMs: v.number(),
   },
-  handler: async (ctx, args) => {
-    const profile = await getProfile(ctx);
-    if (!profile || profile.version !== args.profileVersion) return false;
-    const now = Date.now();
-    await ctx.db.patch(profile._id, {
-      status: "ready",
-      latestCommitSha: args.commitSha,
-      lastVerifiedAt: now,
-      lastError: undefined,
-      lastMissingVariables: undefined,
-      verified: {
-        version: profile.version,
-        commitSha: args.commitSha,
-        config: configOf(profile),
-        durationMs: args.durationMs,
-        verifiedAt: now,
-      },
-      updatedAt: now,
-    });
-    return true;
-  },
+  handler: async (ctx, args) => applyVerified(ctx, args),
 });
+
+export async function applyFailure(
+  ctx: MutationCtx,
+  args: { profileVersion: number; error: string; missingVariables: string[] },
+) {
+  const profile = await getProfile(ctx);
+  if (!profile || profile.version !== args.profileVersion) return false;
+  await ctx.db.patch(profile._id, {
+    status: "failed",
+    lastError: args.error.slice(-4000),
+    lastMissingVariables: args.missingVariables,
+    updatedAt: Date.now(),
+  });
+  return true;
+}
 
 export const recordFailure = internalMutation({
   args: {
@@ -429,15 +417,53 @@ export const recordFailure = internalMutation({
     error: v.string(),
     missingVariables: v.array(v.string()),
   },
+  handler: async (ctx, args) => applyFailure(ctx, args),
+});
+
+export const seedProfile = internalMutation({
+  args: {
+    repoUrl: v.string(),
+    commitSha: v.string(),
+    installCommand: v.string(),
+    startCommand: v.string(),
+    port: v.number(),
+    healthPath: v.string(),
+    previewMode: v.boolean(),
+    workingDirectory: v.optional(v.string()),
+    variables: v.optional(v.array(v.string())),
+  },
   handler: async (ctx, args) => {
-    const profile = await getProfile(ctx);
-    if (!profile || profile.version !== args.profileVersion) return false;
-    await ctx.db.patch(profile._id, {
-      status: "failed",
-      lastError: args.error.slice(-4000),
-      lastMissingVariables: args.missingVariables,
-      updatedAt: Date.now(),
+    if (!/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+(?:\.git)?$/.test(args.repoUrl))
+      throw new ConvexError("Repository must be a public GitHub HTTPS URL");
+    if (!/^[0-9a-f]{7,40}$/i.test(args.commitSha))
+      throw new ConvexError("commitSha must be a git SHA");
+    const existing = await getProfile(ctx);
+    const now = Date.now();
+    const names = [...new Set(args.variables ?? [])];
+    const fields = {
+      repoUrl: args.repoUrl,
+      commitSha: args.commitSha,
+      workingDirectory: args.workingDirectory?.trim() || ".",
+      installCommand: validateCommand(args.installCommand, "install command"),
+      startCommand: validateCommand(args.startCommand, "start command"),
+      port: args.port,
+      healthPath: args.healthPath,
+      previewMode: args.previewMode,
+      variables: names.map((name) => ({ name, source: sourceForVariable(name) })),
+      version: Math.max(1, (existing?.version ?? 0) + 1),
+      status: "unverified" as const,
+      latestCommitSha: args.commitSha,
+      lastError: undefined,
+      lastMissingVariables: undefined,
+      updatedAt: now,
+    };
+    if (existing) {
+      await ctx.db.patch(existing._id, fields);
+      return existing._id;
+    }
+    return ctx.db.insert("environmentProfiles", {
+      singleton: SINGLETON,
+      ...fields,
     });
-    return true;
   },
 });
