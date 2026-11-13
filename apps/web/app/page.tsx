@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { ArrowDown, ArrowUpRight, Asterisk } from "lucide-react";
-import { PatchWidget } from "@/components/patch-widget";
+
 
 const projects = [
   { number: "01", name: "Forma", category: "Brand & digital experience", year: "2026", description: "A quieter home for everyday objects. An identity and storefront built around thoughtful living.", color: "bg-[#e7e9e1]", art: "forma" },
@@ -8,7 +8,8 @@ const projects = [
   { number: "03", name: "Fieldnotes", category: "Editorial & web design", year: "2025", description: "Ideas worth keeping. A small digital publication about the places and people in between.", color: "bg-[#ece5da]", art: "fieldnotes" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const PatchWidget = process.env.PATCH_PREVIEW_MODE === "1" ? null : (await import("@/components/patch-widget")).PatchWidget;
   return (
     <>
       <a href="#main" className="sr-only fixed top-4 left-4 z-50 rounded-full bg-foreground px-4 py-2 text-background focus:not-sr-only">Skip to content</a>
@@ -50,9 +51,9 @@ export default function Home() {
         </main>
         <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6 pb-24 text-[10px] text-muted-foreground"><p>© 2026 · Demo portfolio</p><a href="mailto:hello@example.com" className="flex items-center gap-1 hover:text-foreground">Have something in mind? Let’s talk<ArrowUpRight className="size-3" /></a></footer>
       </div>
-      <Suspense fallback={null}>
+      {PatchWidget && <Suspense fallback={null}>
         <PatchWidget />
-      </Suspense>
+      </Suspense>}
     </>
   );
 }
