@@ -9,13 +9,16 @@ import { LoadingPanel } from "./loading-panel";
 import { cn } from "./lib/utils";
 import { UnlockPanel } from "./unlock-panel";
 
-export type PatchProps = Pick<AgentPanelProps, "onPrompt"> & {
+export type PatchProps = Pick<
+  AgentPanelProps,
+  "onPrompt" | "sandbox" | "workspace" | "environment"
+> & {
   className?: string;
   /** Injected auth state. Omit to keep the open demo panel. */
   auth?: PatchAuth;
 };
 
-export function Patch({ className, onPrompt, auth }: PatchProps) {
+export function Patch({ className, onPrompt, auth, sandbox, workspace, environment }: PatchProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -28,7 +31,10 @@ export function Patch({ className, onPrompt, auth }: PatchProps) {
             className,
           )}
         >
-          <span aria-hidden="true" className="flex gap-2 transition-transform group-hover:-rotate-12">
+          <span
+            aria-hidden="true"
+            className="flex gap-2 transition-transform group-hover:-rotate-12"
+          >
             <span className="h-3 w-[5px] rounded-full bg-current" />
             <span className="h-3 w-[5px] rounded-full bg-current" />
           </span>
@@ -37,7 +43,12 @@ export function Patch({ className, onPrompt, auth }: PatchProps) {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/10 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 motion-reduce:animate-none" />
         {!auth ? (
-          <AgentPanel onPrompt={onPrompt} />
+          <AgentPanel
+            onPrompt={onPrompt}
+            sandbox={sandbox}
+            workspace={workspace}
+            environment={environment}
+          />
         ) : auth.status === "loading" ? (
           <LoadingPanel />
         ) : auth.status === "signedOut" ? (
@@ -45,7 +56,13 @@ export function Patch({ className, onPrompt, auth }: PatchProps) {
         ) : auth.status === "unauthorized" ? (
           <AccessDeniedPanel onSignOut={auth.signOut} />
         ) : (
-          <AgentPanel onPrompt={onPrompt} onSignOut={auth.signOut} />
+          <AgentPanel
+            onPrompt={onPrompt}
+            onSignOut={auth.signOut}
+            sandbox={sandbox}
+            workspace={workspace}
+            environment={environment}
+          />
         )}
       </Dialog.Portal>
     </Dialog.Root>
