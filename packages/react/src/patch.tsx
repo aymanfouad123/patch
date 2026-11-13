@@ -22,9 +22,10 @@ export function Patch({ className, onPrompt, auth, run, environment }: PatchProp
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <button
+          type="button"
           aria-label="Open Patch assistant"
           className={cn(
-            "group fixed right-6 bottom-6 z-40 grid size-16 cursor-pointer place-items-center rounded-[42%_58%_56%_44%/48%_42%_58%_52%] bg-[#b7a1ee] text-[#352255] shadow-[0_6px_24px_-4px_#7860aa66,inset_0_2px_3px_#ffffff90] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600 motion-reduce:transition-none sm:right-8 sm:bottom-8",
+            "group fixed right-6 bottom-6 z-40 flex size-14 items-center justify-center rounded-full bg-[#7961aa] text-white shadow-lg transition hover:scale-105 hover:bg-[#654c96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7961aa] focus-visible:ring-offset-2",
             className,
           )}
         >
