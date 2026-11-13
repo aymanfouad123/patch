@@ -6,6 +6,15 @@ overrides:
   enhanced-resolve: 5.26.1
   graceful-fs: 4.2.11
 
-onlyBuiltDependencies:
-  - sharp
-  - '@tailwindcss/oxide'
+minimumReleaseAgeExclude:
+  - '@better-auth/core@1.7.22'
+  - '@better-auth/drizzle-adapter@1.7.22'
+  - '@better-auth/kysely-adapter@1.7.22'
+  - '@better-auth/memory-adapter@1.7.22'
+  - '@better-auth/mongo-adapter@1.7.22'
+  - '@better-auth/prisma-adapter@1.7.22'
+  - '@better-auth/telemetry@1.7.22'
+  - better-auth@1.7.22
+
+allowBuilds:
+  esbuild: true

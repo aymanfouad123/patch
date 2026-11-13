@@ -9,7 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@convex-dev/better-auth": "^0.13.0",
     "@patch/react": "workspace:*",
+    "better-auth": "~1.7.22",
+    "convex": "^1.49.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "react": "^19.2.0",
