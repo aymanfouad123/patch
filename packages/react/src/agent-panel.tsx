@@ -1,17 +1,18 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowUp, X } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
+import { PanelShell } from "./panel-shell";
 
 export type AgentPanelProps = {
   /** Connect your own agent. Without a handler, prompts stay in this local demo. */
   onPrompt?: (prompt: string) => string | void | Promise<string | void>;
+  onSignOut?: () => void | Promise<void>;
 };
 
-export function AgentPanel({ onPrompt }: AgentPanelProps) {
+export function AgentPanel({ onPrompt, onSignOut }: AgentPanelProps) {
   const [prompt, setPrompt] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([]);
   const [pending, setPending] = useState(false);
@@ -40,18 +41,11 @@ export function AgentPanel({ onPrompt }: AgentPanelProps) {
   }
 
   return (
-    <Dialog.Content className="fixed right-3 bottom-3 z-50 flex h-[560px] max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-[390px] flex-col overflow-hidden rounded-3xl border border-border bg-background text-foreground shadow-[0_24px_100px_-20px_#30204040] outline-none data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom-4 data-[state=open]:fade-in-0 motion-reduce:animate-none sm:right-8 sm:bottom-8">
-      <header className="flex items-center gap-3 border-b border-border px-5 py-4">
-        <Dialog.Title className="flex-1 text-sm font-semibold">Patch</Dialog.Title>
-        <Dialog.Close asChild>
-          <Button variant="ghost" size="icon" aria-label="Close assistant">
-            <X />
-          </Button>
-        </Dialog.Close>
-      </header>
-      <Dialog.Description className="sr-only">
-        Ask a question using the prompt below.
-      </Dialog.Description>
+    <PanelShell
+      title="Patch"
+      description="Ask a question using the prompt below."
+      onSignOut={onSignOut}
+    >
       <div
         role="log"
         aria-label="Conversation"
@@ -110,6 +104,6 @@ export function AgentPanel({ onPrompt }: AgentPanelProps) {
           </div>
         </form>
       </div>
-    </Dialog.Content>
+    </PanelShell>
   );
 }
