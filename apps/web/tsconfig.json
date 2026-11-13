@@ -3,7 +3,10 @@
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
     "incremental": true,
-    "paths": { "@/*": ["./*"] }
+    "paths": {
+      "@/*": ["./*"],
+      "@convex/*": ["../../convex/*"]
+    }
   },
   "include": [
     "next-env.d.ts",

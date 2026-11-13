@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import { ArrowDown, ArrowUpRight, Asterisk } from "lucide-react";
-import { Patch } from "@patch/react";
+import { PatchWidget } from "@/components/patch-widget";
 
 const projects = [
   { number: "01", name: "Forma", category: "Brand & digital experience", year: "2026", description: "A quieter home for everyday objects. An identity and storefront built around thoughtful living.", color: "bg-[#e7e9e1]", art: "forma" },
@@ -49,7 +50,9 @@ export default function Home() {
         </main>
         <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6 pb-24 text-[10px] text-muted-foreground"><p>© 2026 · Demo portfolio</p><a href="mailto:hello@example.com" className="flex items-center gap-1 hover:text-foreground">Have something in mind? Let’s talk<ArrowUpRight className="size-3" /></a></footer>
       </div>
-      <Patch />
+      <Suspense fallback={null}>
+        <PatchWidget />
+      </Suspense>
     </>
   );
 }
