@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@convex-dev/better-auth": "^0.13.0",
+    "@vercel/sandbox": "^3.9.1",
     "better-auth": "~1.7.22",
     "convex": "^1.49.0"
   }

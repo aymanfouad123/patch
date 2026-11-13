@@ -9,10 +9,18 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as environment from "../environment.js";
 import type * as http from "../http.js";
+import type * as lib_environment from "../lib/environment.js";
 import type * as lib_owner from "../lib/owner.js";
 import type * as lib_requireOwner from "../lib/requireOwner.js";
+import type * as lib_runSandboxJob from "../lib/runSandboxJob.js";
+import type * as lib_sandboxCredentials from "../lib/sandboxCredentials.js";
 import type * as patch from "../patch.js";
+import type * as sandbox from "../sandbox.js";
+import type * as sandboxActions from "../sandboxActions.js";
+import type * as workspaceActions from "../workspaceActions.js";
+import type * as workspaces from "../workspaces.js";
 
 import type {
   ApiFromModules,
@@ -22,10 +30,18 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  environment: typeof environment;
   http: typeof http;
+  "lib/environment": typeof lib_environment;
   "lib/owner": typeof lib_owner;
   "lib/requireOwner": typeof lib_requireOwner;
+  "lib/runSandboxJob": typeof lib_runSandboxJob;
+  "lib/sandboxCredentials": typeof lib_sandboxCredentials;
   patch: typeof patch;
+  sandbox: typeof sandbox;
+  sandboxActions: typeof sandboxActions;
+  workspaceActions: typeof workspaceActions;
+  workspaces: typeof workspaces;
 }>;
 
 /**

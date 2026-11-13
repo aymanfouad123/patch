@@ -9,6 +9,7 @@ export default defineConfig({
           name: "convex",
           environment: "edge-runtime",
           include: ["convex/**/*.test.ts"],
+          exclude: ["convex/lib/runSandboxJob.test.ts", "convex/workspaceActions.test.ts"],
           server: {
             deps: {
               inline: ["convex-test", "@convex-dev/better-auth"],
@@ -19,6 +20,13 @@ export default defineConfig({
           alias: {
             "@convex": path.resolve(import.meta.dirname, "convex"),
           },
+        },
+      },
+      {
+        test: {
+          name: "sandbox-node",
+          environment: "node",
+          include: ["convex/lib/runSandboxJob.test.ts", "convex/workspaceActions.test.ts"],
         },
       },
       {

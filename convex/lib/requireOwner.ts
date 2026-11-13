@@ -51,12 +51,40 @@ export async function getOwnerStatus(
 }
 
 export async function requireOwner(ctx: GenericCtx<DataModel>) {
-  const result = await getOwnerStatus(ctx);
-  if (result.status === "signedOut") {
+  const identity = await requireOwnerIdentity(ctx);
+  return identity.user;
+}
+
+/** Owner gate that also returns the Better Auth user id for ownership rows. */
+export async function requireOwnerIdentity(ctx: GenericCtx<DataModel>) {
+  const user = await authComponent.safeGetAuthUser(ctx);
+  if (!user) {
     throw new ConvexError({ code: "UNAUTHENTICATED" });
   }
-  if (result.status === "unauthorized") {
+
+  const ownerId = readOwnerGithubId();
+  if (!ownerId) {
     throw new ConvexError({ code: "FORBIDDEN" });
   }
-  return result.user;
+
+  const account = await ctx.runQuery(components.betterAuth.adapter.findOne, {
+    model: "account",
+    where: [
+      { field: "userId", value: user._id },
+      { field: "providerId", value: "github" },
+      { field: "accountId", value: ownerId },
+    ],
+  });
+
+  if (!account) {
+    throw new ConvexError({ code: "FORBIDDEN" });
+  }
+
+  return {
+    userId: user._id as string,
+    user: {
+      name: user.name,
+      image: user.image ?? null,
+    } satisfies ViewerUser,
+  };
 }
