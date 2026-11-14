@@ -12,6 +12,7 @@ import type * as auth from "../auth.js";
 import type * as http from "../http.js";
 import type * as lib_owner from "../lib/owner.js";
 import type * as lib_requireOwner from "../lib/requireOwner.js";
+import type * as projects from "../projects.js";
 import type * as viewer from "../viewer.js";
 
 import type {
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/owner": typeof lib_owner;
   "lib/requireOwner": typeof lib_requireOwner;
+  projects: typeof projects;
   viewer: typeof viewer;
 }>;
 
